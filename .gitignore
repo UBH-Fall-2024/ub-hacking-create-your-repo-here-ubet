@@ -1,3 +1,5 @@
-echo "ubhvenv/" > .gitignore
-echo "__pycache__/" >> .gitignore
-echo "*.pyc" >> .gitignore
+ubhvenv/
+__pycache__/
+*.pyc
+package-lock.json
+package.json
