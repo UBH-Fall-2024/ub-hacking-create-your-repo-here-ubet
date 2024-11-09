@@ -1,0 +1,9 @@
+{
+    "scripts": {
+      "dev": "concurrently \"cd react-frontend && npm start\" \".\\ubhvenv\\Scripts\\activate && cd backend && python app.py\""
+    },
+    "dependencies": {
+      "concurrently": "^8.0.0"
+    }
+  }
+  
