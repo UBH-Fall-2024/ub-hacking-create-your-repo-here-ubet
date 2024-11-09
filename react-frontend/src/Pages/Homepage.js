@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 function Homepage() {
     const [message, setMessage] = useState("");
@@ -42,25 +43,34 @@ function Homepage() {
     };
 
     return (
-        <div>
-            <h1>Hello from React Frontend</h1>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Enter a message"
-                />
-                <button type="submit">Submit</button>
-            </form>
-            <h2>Messages</h2>
-            <ul>
-                {messages.map((msg, index) => (
-                    <li key={index}>
-                        {msg.message} (at {new Date(msg.timestamp).toLocaleString()})
-                    </li>
-                ))}
-            </ul>
+        <div style={{ display: "flex" }}>
+            {/* Sidebar with the link to Blackjack */}
+            <div style={{ marginRight: "20px", width: "150px" }}>
+                <h3>Navigation</h3>
+                <Link to="/blackjack">Go to Blackjack</Link>
+            </div>
+
+            {/* Main Content */}
+            <div>
+                <h1>Hello from React Frontend</h1>
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Enter a message"
+                    />
+                    <button type="submit">Submit</button>
+                </form>
+                <h2>Messages</h2>
+                <ul>
+                    {messages.map((msg, index) => (
+                        <li key={index}>
+                            {msg.message} (at {new Date(msg.timestamp).toLocaleString()})
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 }
