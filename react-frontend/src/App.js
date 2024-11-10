@@ -11,6 +11,8 @@ function App() {
             domain="dev-kb24bzbdw6k61nk2.us.auth0.com" 
             clientId="anoENGeMxqbzjceZMzuJefRZC0QmuqDh"
             redirectUri={window.location.origin}
+            useRefreshTokens={true}             // Enable refresh tokens
+            cacheLocation="localstorage"
         >      
             <Router>
                 <Routes>
