@@ -33,6 +33,69 @@ function Blackjack() {
     
         return newDeck;
     };
+
+    const getRandomCard = (deck) => {
+        const randomIndex = Math.floor(Math.random() * deck.length);
+        const randomCard = deck[randomIndex];
+        
+        const updatedDeck = [...deck.slice(0, randomIndex), ...deck.slice(randomIndex + 1)];
+        return { randomCard, updatedDeck };
+    };
+    
+    
+    const dealCards = (deck) => {
+        const playerCard1 = getRandomCard(deck);
+        const dealerCard1 = getRandomCard(playerCard1.updatedDeck);
+        const playerCard2 = getRandomCard(dealerCard1.updatedDeck);
+
+        const playerStartingHand = [playerCard1.randomCard, playerCard2.randomCard];
+        const dealerStartingHand = [dealerCard1.randomCard, {}];
+
+        const player = {
+            cards: playerStartingHand,
+            count: getCount(playerStartingHand)
+        };
+        const dealer = {
+            cards: dealerStartingHand,
+            count: getCount(dealerStartingHand)
+        };
+
+        return { updatedDeck: playerCard2.updatedDeck, player, dealer };
+    };
+
+    // count cards for user and dealer
+    const getCount = (cards) => {
+        let total = 0;
+        let aceCount = 0;
+    
+        // adding all non ace cards, and count number of aces
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+    
+            if (card.number === 'J' || card.number === 'Q' || card.number === 'K') {
+                total += 10; // jack queen king is 10
+            } 
+            else if (card.number === 'A') {
+                aceCount += 1; // count number of aces
+            } 
+            else {
+                total += card.number; // Add the face value of number cards (2-10)
+            }
+        }
+    
+        // handling aces
+        // adding 11 if total is < 21
+        // otherwise add 1
+        for (let j = 0; j < aceCount; j++) {
+            if (total + 11 <= 21) {
+                total += 11; // add 11 if it doesn't bust
+            } else {
+                total += 1; // add 1
+            }
+        }
+    
+        return total;
+    };
     
 
     return (
