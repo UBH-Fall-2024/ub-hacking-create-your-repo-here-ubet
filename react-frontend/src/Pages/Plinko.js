@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Matter from 'matter-js';
 import { useBalance } from '../BalanceContext'; // Import useBalance
-import styles from './Plinko.module.css';
+import { Link } from 'react-router-dom';
+import logo from '../imgs/ubhlogo.png';
+//import styles from './Plinko.module.css';
 
 // Global positioning and scaling variables for multiplier display
 const MULTIPLIER_VERTICAL_OFFSET = -140; // Controls vertical positioning of multipliers below the canvas
-const MULTIPLIER_HORIZONTAL_OFFSET = 455; // Controls horizontal positioning of multipliers
+const MULTIPLIER_HORIZONTAL_OFFSET = 360; // Controls horizontal positioning of multipliers
 const MULTIPLIER_WIDTH_SCALE = 0.5; // Controls the width scaling of multipliers (1 = 100% of canvas width)
 
 // New variables for controlling the exact `x` and `y` position of multiplier collision zones
@@ -53,8 +55,10 @@ const Plinko = () => {
         const GAP = 40;
         const PEG_RADIUS = 5;
         const pegs = [];
-        for (let row = 0; row < 16; row++) {
-            const cols = row + 3;
+        const TOTAL_ROWS = 13;  // Reduced from 16 to 12 for a more compact pyramid shape
+
+        for (let row = 0; row < TOTAL_ROWS; row++) {
+            const cols = row + 2; // Start with fewer columns and increment by 1 per row
             for (let col = 0; col < cols; col++) {
                 const x = canvasWidth / 2 + (col - (cols - 1) / 2) * GAP;
                 const y = GAP + row * GAP;
@@ -141,48 +145,75 @@ const Plinko = () => {
     };
 
     return (
-        <div>
-            <canvas ref={canvasRef}></canvas>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-                <button onClick={dropBall}>Drop Ball</button>
-                <div>Balance: ${balance.toFixed(2)}</div>
+        <div style={{ display: 'flex' }}>
+            {/* Sidebar with logo and navigation */}
+            <div className="sidebar">
+                <Link to="/">
+                    <img src={logo} alt="UBet Logo" className="logo" />
+                </Link>
+                <h3>Navigation</h3>
+                <Link to="/blackjack">Go to Blackjack</Link>
+                <Link to="/plinko">Go to Plinko</Link>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                <label>
-                    Wager per ball: $
-                    <input
-                        type="number"
-                        value={wager}
-                        onChange={handleWagerChange}
-                        min="0.1"
-                        step="0.1"
-                        style={{ width: '60px', marginLeft: '5px' }}
-                    />
-                </label>
-            </div>
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginTop: `${MULTIPLIER_VERTICAL_OFFSET}px`, // Adjust vertical offset for visual display
-                marginLeft: `${MULTIPLIER_HORIZONTAL_OFFSET}px`, // Adjust horizontal offset for visual display
-                backgroundColor: '#14151f', // Dark background for visibility
-                padding: '10px 0',
-                width: `${canvasWidth * MULTIPLIER_WIDTH_SCALE}px`, // Adjust width with scaling factor
-            }}>
-                {multipliers.map((multiplier, index) => (
-                    <div key={index} style={{
-                        width: `${100 / multipliers.length}%`,
-                        textAlign: 'center',
-                        color: '#4CAF50', // Green color for text
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        border: '1px solid #4CAF50', // Add outline to each multiplier
-                        padding: '5px 0', // Adjust padding for visibility
-                        boxSizing: 'border-box', // Ensure borders are included in width calculation
-                    }}>
-                        x{multiplier}
+    
+            {/* Main content area, shifted right of the sidebar */}
+            <div style={{ flex: 1, padding: '20px', marginLeft: '220px' }}>
+                <canvas ref={canvasRef}></canvas>
+    
+                {/* Centering Drop Ball, Balance, and Wager elements */}
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px', gap: '350px' }}>
+                    <div>
+                        <button 
+                            onClick={dropBall} 
+                            style={{ backgroundColor: '#1a73e8', color: 'white', border: 'none', padding: '10px 20px', cursor: 'pointer' }}
+                        >
+                            Drop Ball
+                        </button>
+                        
+                        <label style={{ color: 'white', display: 'flex', alignItems: 'center', marginLeft: '-25px' }}>
+                            Wager per ball: $
+                            <input
+                                type="number"
+                                value={wager}
+                                onChange={handleWagerChange}
+                                min="0.1"
+                                step="0.1"
+                                style={{ width: '60px', height: '30px', marginLeft: '5px' }}
+                            />
+                        </label>
+
                     </div>
-                ))}
+
+                    <div style={{ color: 'white', fontSize: '16px' }}>Balance: ${balance.toFixed(2)}</div>
+                </div>
+    
+
+                
+
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginTop: `${MULTIPLIER_VERTICAL_OFFSET}px`, // Adjust vertical offset for visual display
+                    backgroundColor: '#14151f', // Dark background for visibility
+                    padding: '10px 0',
+                    width: `${canvasWidth * MULTIPLIER_WIDTH_SCALE}px`, // Adjust width with scaling factor
+                    marginLeft: `${MULTIPLIER_HORIZONTAL_OFFSET}px`, // Move multipliers horizontally
+                }}>
+                    {multipliers.map((multiplier, index) => (
+                        <div key={index} style={{
+                            width: `${100 / multipliers.length}%`,
+                            textAlign: 'center',
+                            color: '#4CAF50', // Green color for text
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            border: '1px solid #4CAF50', // Add outline to each multiplier
+                            padding: '5px 0', // Adjust padding for visibility
+                            boxSizing: 'border-box', // Ensure borders are included in width calculation
+                        }}>
+                            x{multiplier}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
