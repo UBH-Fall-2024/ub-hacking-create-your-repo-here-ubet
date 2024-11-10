@@ -7,7 +7,7 @@ const MULTIPLIER_HORIZONTAL_OFFSET = 455; // Controls horizontal positioning of 
 const MULTIPLIER_WIDTH_SCALE = 0.5; // Controls the width scaling of multipliers (1 = 100% of canvas width)
 
 // New variables for controlling the exact `x` and `y` position of multiplier collision zones
-const MULTIPLIER_ZONE_X_OFFSET = 0; // Adjusts the horizontal position of multiplier zones
+const MULTIPLIER_ZONE_X_OFFSET = 5; // Adjusts the horizontal position of multiplier zones
 const MULTIPLIER_ZONE_Y_OFFSET = -30; // Adjusts the vertical position of multiplier zones
 
 const Plinko = () => {
