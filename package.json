@@ -3,6 +3,7 @@
         "dev": "concurrently \"cd react-frontend && npm start\" \".\\ubhvenv\\Scripts\\activate && cd backend && python app.py\""
     },
     "dependencies": {
+        "@solana/web3.js": "^1.95.4",
         "concurrently": "^8.2.2",
         "pixi.js": "^8.5.2",
         "react-router-dom": "^6.28.0",
