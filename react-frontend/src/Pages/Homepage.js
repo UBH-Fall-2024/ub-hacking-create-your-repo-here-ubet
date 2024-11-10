@@ -279,20 +279,26 @@ function Homepage() {
 
     return (
         <div className="main-container">
-            {/* Sidebar with UBet logo and navigation links */}
-            <div className="sidebar">
-            <Link to="/">
-                    <img src={logo} alt="UBet Logo" className="logo" /> {/* Make logo clickable */}
-            </Link>
-            <h3>Navigation</h3>
-                <Link to="/blackjack">Go to Blackjack</Link>
-                <Link to="/plinko">Go to Plinko</Link>
-            </div>
-    
-            {/* Main content on the right */}
+
             <div className="content">
                 {isAuthenticated ? (
-                    <div>
+                        <div>
+                            <div className="sidebar">
+                            <Link to="/">
+                                    <img src={logo} alt="UBet Logo" className="logo" />
+                            </Link>
+
+                            <h3>Navigation</h3>
+                            {isWalletDataFetched && (!walletAddress) ? (
+                                <p className="welcome">Connect Phantom Wallet to start playing!</p>
+                            ) : (
+                                <div>
+                                    <Link to="/blackjack">Go to Blackjack</Link>
+                                    <Link to="/plinko">Go to Plinko</Link>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Header section with Welcome message and Balance */}
                         <div className="header-section">
                             <p className="welcome">Welcome, {user.name}</p>
@@ -350,6 +356,10 @@ function Homepage() {
                     </div>
                 ) : (
                     <div>
+                        <Link to="/">
+                                <img src={logo} alt="UBet Logo" className="logo" /> {/* Make logo clickable */}
+                        </Link>     
+
                         <p>Please log in to access more features.</p>
                         <button onClick={() => loginWithRedirect()}>Log In/Sign Up</button>
                     </div>
