@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Auth0Provider } from '@auth0/auth0-react';
 import Homepage from './Pages/Homepage';
 import Blackjack from './Pages/Blackjack';
-
+import Plinko from './Pages/Plinko'; 
 
 function App() {
     return (
@@ -15,8 +15,8 @@ function App() {
             <Router>
                 <Routes>
                     <Route path="/" element={<Homepage />} />
-
-                    <Route path="/blackjack" element={<Blackjack />} /> {/* Add the Blackjack route */}
+                    <Route path="/blackjack" element={<Blackjack />} /> {/* Blackjack route */}
+                    <Route path="/plinko" element={<Plinko />} /> {/* Plinko route */}
                 </Routes>
             </Router>
         </Auth0Provider>                

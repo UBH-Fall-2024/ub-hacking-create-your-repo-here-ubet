@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-
 import { Link } from 'react-router-dom';
 
 function Homepage() {
-    const { user, isAuthenticated, logout } = useAuth0();   //using Auth0
-    const { loginWithRedirect } = useAuth0();   //using Auth0
+    const { user, isAuthenticated, logout } = useAuth0();
+    const { loginWithRedirect } = useAuth0();
     const [message, setMessage] = useState("");
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState([]);
-
 
     useEffect(() => {
         fetchMessages();
@@ -40,39 +38,39 @@ function Homepage() {
                 if (!response.ok) throw new Error("Failed to add message");
 
                 setInput("");
-                fetchMessages();  // Refresh the messages list
+                fetchMessages();
             } catch (error) {
                 console.error("Fetch error:", error);
             }
         }
     };
 
-
     return (
         <div>
-            {/* Sidebar with the link to Blackjack */}
+            {/* Sidebar with the link to Blackjack and Plinko */}
             <div>
                 <h3>Navigation</h3>
-                <Link to="/blackjack">Go to Blackjack</Link>
+                <Link to="/blackjack">Go to Blackjack</Link><br />
+                <Link to="/plinko">Go to Plinko</Link>
             </div>
 
             {/* Main Content */}
             <div>
                 <h1>Hello from React Frontend</h1>
 
-            {isAuthenticated ? (
-                <div>
-                    <p>Welcome, {user.name}</p>
-                    <button onClick={() => logout({ returnTo: window.location.origin })}>
-                        Sign Out
-                    </button>
-                </div>
-            ) : (
-                <div> 
-                    <p>Please log in to access more features.</p>
-                    <button onClick={() => loginWithRedirect()}>Log In/Sign Up</button>
-                </div> 
-            )}            
+                {isAuthenticated ? (
+                    <div>
+                        <p>Welcome, {user.name}</p>
+                        <button onClick={() => logout({ returnTo: window.location.origin })}>
+                            Sign Out
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <p>Please log in to access more features.</p>
+                        <button onClick={() => loginWithRedirect()}>Log In/Sign Up</button>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
                     <input
