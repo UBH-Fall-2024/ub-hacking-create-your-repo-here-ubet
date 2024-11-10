@@ -9,14 +9,18 @@ const Plinko = () => {
     // Define multipliers for each slot at the bottom
     const multipliers = [50, 20, 7, 4, 3, 1, 1, 0, 0, 0, 1, 1, 3, 4, 7, 20, 50];
 
-    // Keep track of remaining balls and player score
-    const [ballsLeft, setBallsLeft] = useState(10);
+    // Keep track of player balance, wager per ball, and score
+    const [balance, setBalance] = useState(100); // Starting balance of $100
+    const [wager, setWager] = useState(1); // Wager per ball, default $1
     const [score, setScore] = useState(0);
 
     const canvasRef = useRef(null);
     const engineRef = useRef(Matter.Engine.create({
         gravity: { scale: 0.0007 },
     }));
+
+    // Using useRef to track active balls so it doesn't reset on rerenders
+    const activeBallsRef = useRef(new Set());
 
     useEffect(() => {
         // Create the renderer
@@ -73,11 +77,17 @@ const Plinko = () => {
         Matter.Events.on(engineRef.current, 'collisionStart', event => {
             event.pairs.forEach(({ bodyA, bodyB }) => {
                 multiplierZones.forEach((zone) => {
-                    if ((bodyA === zone.body || bodyB === zone.body) && ballsLeft > 0) {
-                        const points = zone.multiplier;
-                        setScore(prevScore => prevScore + points);
-                        setBallsLeft(prevBalls => prevBalls - 1);
-                        Matter.Composite.remove(engineRef.current.world, bodyA.label === 'Ball' ? bodyA : bodyB);
+                    if ((bodyA === zone.body || bodyB === zone.body)) {
+                        const ball = bodyA.label === 'Ball' ? bodyA : bodyB;
+                        if (activeBallsRef.current.has(ball)) {
+                            const points = zone.multiplier * wager;
+                            setScore(prevScore => prevScore + points);
+                            setBalance(prevBalance => prevBalance + points);
+
+                            // Remove ball from Matter.js world and activeBallsRef
+                            Matter.Composite.remove(engineRef.current.world, ball);
+                            activeBallsRef.current.delete(ball);
+                        }
                     }
                 });
             });
@@ -88,17 +98,31 @@ const Plinko = () => {
             Matter.Runner.stop(runner);
             Matter.Engine.clear(engineRef.current);
         };
-    }, [canvasWidth, canvasHeight, ballsLeft]);
+    }, [canvasWidth, canvasHeight, balance, wager]);
 
     // Drop a ball from the top center of the canvas
     const dropBall = () => {
-        if (ballsLeft > 0) {
+        if (balance >= wager) {
             const ball = Matter.Bodies.circle(canvasWidth / 2, 0, 7, {
                 restitution: 0.6,
+                label: 'Ball', // Label to identify balls during collision handling
                 render: { fillStyle: '#f23' },
             });
             Matter.Composite.add(engineRef.current.world, ball);
-            setBallsLeft(ballsLeft - 1);
+            setBalance(prevBalance => prevBalance - wager);
+
+            // Add to activeBallsRef set to track it for removal
+            activeBallsRef.current.add(ball);
+        } else {
+            alert("Insufficient balance to drop a ball with the current wager.");
+        }
+    };
+
+    // Handle wager input change
+    const handleWagerChange = (event) => {
+        const newWager = parseFloat(event.target.value);
+        if (newWager > 0) {
+            setWager(newWager);
         }
     };
 
@@ -107,8 +131,21 @@ const Plinko = () => {
             <canvas ref={canvasRef}></canvas>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
                 <button onClick={dropBall}>Drop Ball</button>
-                <div>Balls left: {ballsLeft}</div>
+                <div>Balance: ${balance.toFixed(2)}</div>
                 <div>Score: {score}</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                <label>
+                    Wager per ball: $
+                    <input
+                        type="number"
+                        value={wager}
+                        onChange={handleWagerChange}
+                        min="0.1"
+                        step="0.1"
+                        style={{ width: '60px', marginLeft: '5px' }}
+                    />
+                </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
                 {multipliers.map((multiplier, index) => (
