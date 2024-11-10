@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Matter from 'matter-js';
 
+// Global positioning and scaling variables for multiplier display
+const MULTIPLIER_VERTICAL_OFFSET = -140; // Controls vertical positioning of multipliers below the canvas
+const MULTIPLIER_HORIZONTAL_OFFSET = 455; // Controls horizontal positioning of multipliers
+const MULTIPLIER_WIDTH_SCALE = 0.5; // Controls the width scaling of multipliers (1 = 100% of canvas width)
+
+// New variables for controlling the exact `x` and `y` position of multiplier collision zones
+const MULTIPLIER_ZONE_X_OFFSET = 0; // Adjusts the horizontal position of multiplier zones
+const MULTIPLIER_ZONE_Y_OFFSET = -30; // Adjusts the vertical position of multiplier zones
+
 const Plinko = () => {
     // Set canvas dimensions
     const canvasWidth = window.innerWidth * 0.9;
@@ -10,12 +19,12 @@ const Plinko = () => {
     const multipliers = [50, 20, 7, 4, 3, 1, 1, 0, 0, 0, 1, 1, 3, 4, 7, 20, 50];
 
     // Keep track of player balance and wager per ball
-    const [balance, setBalance] = useState(100); // Starting balance of $100
+    const [balance, setBalance] = useState(1000); // Starting balance of $1000
     const [wager, setWager] = useState(1); // Wager per ball, default $1
 
     const canvasRef = useRef(null);
     const engineRef = useRef(Matter.Engine.create({
-        gravity: { scale: 0.0007 },
+        gravity: { scale: 0.0005 },
     }));
 
     // Using useRef to track active balls so it doesn't reset on rerenders
@@ -56,17 +65,21 @@ const Plinko = () => {
         }
         Matter.Composite.add(engineRef.current.world, pegs);
 
-        // Create invisible multiplier zones at the bottom
+        // Create multiplier zones at the bottom, aligning them visually
         const multiplierZones = multipliers.map((multiplier, i) => {
-            const zoneWidth = canvasWidth / multipliers.length;
-            const x = i * zoneWidth + zoneWidth / 2;
-            const y = canvasHeight - 30; // Position zones slightly above the canvas bottom
+            const zoneWidth = (canvasWidth * MULTIPLIER_WIDTH_SCALE) / multipliers.length;
+            const x = i * zoneWidth + zoneWidth / 2 + (canvasWidth * (1 - MULTIPLIER_WIDTH_SCALE)) / 2 + MULTIPLIER_ZONE_X_OFFSET;
+            const y = canvasHeight + MULTIPLIER_ZONE_Y_OFFSET; // Adjust y-position for collision zones
+
             return {
                 multiplier,
                 body: Matter.Bodies.rectangle(x, y, zoneWidth, 10, {
                     isStatic: true,
                     label: `Multiplier-${multiplier}`,
-                    render: { visible: false }, // Make the zone invisible
+                    render: { 
+                        fillStyle: '#4CAF50', // TEMPORARILY visible to verify alignment
+                        opacity: 0.5 
+                    }, // Temporarily make the zone visible to verify alignment
                 }),
             };
         });
@@ -79,6 +92,10 @@ const Plinko = () => {
                     if ((bodyA === zone.body || bodyB === zone.body)) {
                         const ball = bodyA.label === 'Ball' ? bodyA : bodyB;
                         if (activeBallsRef.current.has(ball)) {
+                            // Update balance based on the multiplier for this zone
+                            const multiplierEffect = zone.multiplier * wager;
+                            setBalance(prevBalance => prevBalance + multiplierEffect);
+
                             // Remove ball from Matter.js world and activeBallsRef
                             Matter.Composite.remove(engineRef.current.world, ball);
                             activeBallsRef.current.delete(ball);
@@ -93,7 +110,7 @@ const Plinko = () => {
             Matter.Runner.stop(runner);
             Matter.Engine.clear(engineRef.current);
         };
-    }, [canvasWidth, canvasHeight]);
+    }, [canvasWidth, canvasHeight, wager]);
 
     // Drop a ball from the top center of the canvas
     const dropBall = () => {
@@ -141,9 +158,26 @@ const Plinko = () => {
                     />
                 </label>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: `${MULTIPLIER_VERTICAL_OFFSET}px`, // Adjust vertical offset for visual display
+                marginLeft: `${MULTIPLIER_HORIZONTAL_OFFSET}px`, // Adjust horizontal offset for visual display
+                backgroundColor: '#14151f', // Dark background for visibility
+                padding: '10px 0',
+                width: `${canvasWidth * MULTIPLIER_WIDTH_SCALE}px`, // Adjust width with scaling factor
+            }}>
                 {multipliers.map((multiplier, index) => (
-                    <div key={index} style={{ width: `${100 / multipliers.length}%`, textAlign: 'center', color: '#ffffff' }}>
+                    <div key={index} style={{
+                        width: `${100 / multipliers.length}%`,
+                        textAlign: 'center',
+                        color: '#4CAF50', // Green color for text
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        border: '1px solid #4CAF50', // Add outline to each multiplier
+                        padding: '5px 0', // Adjust padding for visibility
+                        boxSizing: 'border-box', // Ensure borders are included in width calculation
+                    }}>
                         x{multiplier}
                     </div>
                 ))}
