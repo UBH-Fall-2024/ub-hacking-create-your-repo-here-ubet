@@ -1,95 +1,124 @@
-import React, { useEffect, useRef } from "react";
-import Matter, { Engine, Render, Runner, Bodies, Composite } from "matter-js";
+import React, { useState, useEffect, useRef } from 'react';
+import Matter from 'matter-js';
 
-function Plinko() {
-    const sceneRef = useRef(null);
+const Plinko = () => {
+    // Set canvas dimensions
+    const canvasWidth = window.innerWidth * 0.9;
+    const canvasHeight = window.innerHeight * 0.8;
+
+    // Define multipliers for each slot at the bottom
+    const multipliers = [50, 20, 7, 4, 3, 1, 1, 0, 0, 0, 1, 1, 3, 4, 7, 20, 50];
+
+    // Keep track of remaining balls and player score
+    const [ballsLeft, setBallsLeft] = useState(10);
+    const [score, setScore] = useState(0);
+
+    const canvasRef = useRef(null);
+    const engineRef = useRef(Matter.Engine.create({
+        gravity: { scale: 0.0007 },
+    }));
 
     useEffect(() => {
-        const worldWidth = 800;
-        const startPins = 5;
-        const pinLines = 25;
-        const pinSize = 3;
-        const pinGap = 30;
-        const ballSize = 5;
-        const ballElastity = 0.75;
-
-        // Create an engine
-        const engine = Engine.create();
-        const { world } = engine;
-
-        // Create a renderer
-        const render = Render.create({
-            element: sceneRef.current, // Render within the ref element
-            engine: engine,
+        // Create the renderer
+        const render = Matter.Render.create({
+            canvas: canvasRef.current,
+            engine: engineRef.current,
             options: {
-                width: worldWidth,
-                height: 600,
+                width: canvasWidth,
+                height: canvasHeight,
                 wireframes: false,
-                background: "#f4f4f8"
-            }
+                background: '#14151f',
+            },
         });
+        Matter.Render.run(render);
 
-        // Create pins
-        const pins = [];
-        for (let l = 0; l < pinLines; l++) {
-            const linePins = startPins + l;
-            const lineWidth = linePins * pinGap;
-            for (let i = 0; i < linePins; i++) {
-                const pin = Bodies.circle(
-                    worldWidth / 2 - lineWidth / 2 + i * pinGap,
-                    100 + l * pinGap,
-                    pinSize,
-                    { isStatic: true, render: { fillStyle: "#8b0000" } }
-                );
-                pins.push(pin);
+        const runner = Matter.Runner.create();
+        Matter.Runner.run(runner, engineRef.current);
+
+        // Create pegs in a triangular formation
+        const GAP = 40;
+        const PEG_RADIUS = 5;
+        const pegs = [];
+        for (let row = 0; row < 16; row++) {
+            const cols = row + 3;
+            for (let col = 0; col < cols; col++) {
+                const x = canvasWidth / 2 + (col - (cols - 1) / 2) * GAP;
+                const y = GAP + row * GAP;
+                const peg = Matter.Bodies.circle(x, y, PEG_RADIUS, {
+                    isStatic: true,
+                    render: { fillStyle: '#ffffff' },
+                });
+                pegs.push(peg);
             }
         }
-        Composite.add(world, pins);
+        Matter.Composite.add(engineRef.current.world, pegs);
 
-        // Create initial ball
-        const ball = Bodies.circle(worldWidth / 2, 0, ballSize, {
-            restitution: ballElastity,
-            render: { fillStyle: "#00008b" }
+        // Create ground and multiplier zones
+        const multiplierZones = multipliers.map((multiplier, i) => {
+            const zoneWidth = canvasWidth / multipliers.length;
+            const x = i * zoneWidth + zoneWidth / 2;
+            const y = canvasHeight - 20;
+            return {
+                multiplier,
+                body: Matter.Bodies.rectangle(x, y, zoneWidth, 10, {
+                    isStatic: true,
+                    label: `Multiplier-${multiplier}`,
+                    render: { fillStyle: '#444444' },
+                }),
+            };
         });
-        Composite.add(world, [ball]);
+        multiplierZones.forEach(zone => Matter.Composite.add(engineRef.current.world, zone.body));
 
-        // Run the renderer and engine
-        Render.run(render);
-        const runner = Runner.create();
-        Runner.run(runner, engine);
-
-        // Click event to add more balls
-        const handleClick = (e) => {
-            const rect = sceneRef.current.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const newBall = Bodies.circle(x, y, ballSize, {
-                restitution: ballElastity,
-                render: { fillStyle: "#00008b" }
+        // Add collision handling for multiplier zones
+        Matter.Events.on(engineRef.current, 'collisionStart', event => {
+            event.pairs.forEach(({ bodyA, bodyB }) => {
+                multiplierZones.forEach((zone) => {
+                    if ((bodyA === zone.body || bodyB === zone.body) && ballsLeft > 0) {
+                        const points = zone.multiplier;
+                        setScore(prevScore => prevScore + points);
+                        setBallsLeft(prevBalls => prevBalls - 1);
+                        Matter.Composite.remove(engineRef.current.world, bodyA.label === 'Ball' ? bodyA : bodyB);
+                    }
+                });
             });
-            Composite.add(world, [newBall]);
-        };
+        });
 
-        // Attach click event
-        sceneRef.current.addEventListener("click", handleClick);
-
-        // Cleanup on component unmount
         return () => {
-            Render.stop(render);
-            Runner.stop(runner);
-            Engine.clear(engine);
-            render.canvas.remove();
-            render.textures = {};
-            sceneRef.current.removeEventListener("click", handleClick);
+            Matter.Render.stop(render);
+            Matter.Runner.stop(runner);
+            Matter.Engine.clear(engineRef.current);
         };
-    }, []);
+    }, [canvasWidth, canvasHeight, ballsLeft]);
+
+    // Drop a ball from the top center of the canvas
+    const dropBall = () => {
+        if (ballsLeft > 0) {
+            const ball = Matter.Bodies.circle(canvasWidth / 2, 0, 7, {
+                restitution: 0.6,
+                render: { fillStyle: '#f23' },
+            });
+            Matter.Composite.add(engineRef.current.world, ball);
+            setBallsLeft(ballsLeft - 1);
+        }
+    };
 
     return (
         <div>
-            <h1>Welcome to Plinko</h1>
-            <div ref={sceneRef} style={{ border: "1px solid black", margin: "20px auto", width: "800px", height: "600px" }} />
+            <canvas ref={canvasRef}></canvas>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+                <button onClick={dropBall}>Drop Ball</button>
+                <div>Balls left: {ballsLeft}</div>
+                <div>Score: {score}</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                {multipliers.map((multiplier, index) => (
+                    <div key={index} style={{ width: `${100 / multipliers.length}%`, textAlign: 'center', color: '#ffffff' }}>
+                        x{multiplier}
+                    </div>
+                ))}
+            </div>
         </div>
     );
-}
+};
 
 export default Plinko;

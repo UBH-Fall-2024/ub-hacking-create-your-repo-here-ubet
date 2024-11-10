@@ -4,6 +4,8 @@
     },
     "dependencies": {
         "concurrently": "^8.0.0",
-        "react-router-dom": "^6.28.0"
+        "pixi.js": "^8.5.2",
+        "react-router-dom": "^6.28.0",
+        "tone": "^15.0.4"
     }
 }
