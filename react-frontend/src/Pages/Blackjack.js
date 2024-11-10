@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useBalance } from '../BalanceContext';
 
 function Blackjack() {
+    const { balance, updateUserBalance } = useBalance();
     const [deck, setDeck] = useState([]);
     const [dealer, setDealer] = useState(null);
     const [player, setPlayer] = useState(null);
-    const [wallet, setWallet] = useState(100);
+    const [wallet, setWallet] = useState(parseFloat(balance.toFixed(2)) || 0);
     const [inputValue, setInputValue] = useState('');
     const [currentBet, setCurrentBet] = useState(null);
     const [gameOver, setGameOver] = useState(false);
     const [message, setMessage] = useState(null);
+
+    useEffect(() => {
+        setWallet(balance ? parseFloat(balance.toFixed(2)) : 0);
+    }, [balance]);
 
     const makeDeck = () => {
         const cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'];
@@ -91,7 +97,6 @@ function Blackjack() {
         setMessage(null);
 
         if (type !== 'continue') {
-            setWallet(100);
             setInputValue('');
         }
     };
@@ -130,6 +135,7 @@ function Blackjack() {
             revealDealerHand(updatedDeck);
             setGameOver(true);
             setMessage('BUST! You lose.');
+            updateUserBalance(-currentBet);
         }
     };
 
@@ -170,11 +176,14 @@ function Blackjack() {
     const determineGameResult = (dealer) => {
         if (dealer.count > 21) {
             setWallet(wallet + currentBet * 2);
+            updateUserBalance(currentBet);
             return 'Dealer busts! You win!';
         } else if (dealer.count > player.count) {
+            updateUserBalance(-currentBet);
             return 'Dealer wins.';
         } else if (dealer.count < player.count) {
             setWallet(wallet + currentBet * 2);
+            updateUserBalance(currentBet);
             return 'You win!';
         } else {
             setWallet(wallet + currentBet);
