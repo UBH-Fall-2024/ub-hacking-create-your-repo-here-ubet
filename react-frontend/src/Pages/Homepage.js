@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 
+import { Link } from 'react-router-dom';
 
 function Homepage() {
     const { user, isAuthenticated, logout } = useAuth0();   //using Auth0
@@ -49,7 +50,15 @@ function Homepage() {
 
     return (
         <div>
-            <h1>Hello from React Frontend</h1>
+            {/* Sidebar with the link to Blackjack */}
+            <div>
+                <h3>Navigation</h3>
+                <Link to="/blackjack">Go to Blackjack</Link>
+            </div>
+
+            {/* Main Content */}
+            <div>
+                <h1>Hello from React Frontend</h1>
 
             {isAuthenticated ? (
                 <div>
@@ -65,23 +74,24 @@ function Homepage() {
                 </div> 
             )}            
 
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Enter a message"
-                />
-                <button type="submit">Submit</button>
-            </form>
-            <h2>Messages</h2>
-            <ul>
-                {messages.map((msg, index) => (
-                    <li key={index}>
-                        {msg.message} (at {new Date(msg.timestamp).toLocaleString()})
-                    </li>
-                ))}
-            </ul>
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Enter a message"
+                    />
+                    <button type="submit">Submit</button>
+                </form>
+                <h2>Messages</h2>
+                <ul>
+                    {messages.map((msg, index) => (
+                        <li key={index}>
+                            {msg.message} (at {new Date(msg.timestamp).toLocaleString()})
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 }

@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Auth0Provider } from '@auth0/auth0-react';
 import Homepage from './Pages/Homepage';
+import Blackjack from './Pages/Blackjack';
+
 
 function App() {
     return (
@@ -14,7 +16,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Homepage />} />
 
-                    {/* Add more routes here if needed */}
+                    <Route path="/blackjack" element={<Blackjack />} /> {/* Add the Blackjack route */}
                 </Routes>
             </Router>
         </Auth0Provider>                
