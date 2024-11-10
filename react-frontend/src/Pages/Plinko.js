@@ -9,10 +9,9 @@ const Plinko = () => {
     // Define multipliers for each slot at the bottom
     const multipliers = [50, 20, 7, 4, 3, 1, 1, 0, 0, 0, 1, 1, 3, 4, 7, 20, 50];
 
-    // Keep track of player balance, wager per ball, and score
+    // Keep track of player balance and wager per ball
     const [balance, setBalance] = useState(100); // Starting balance of $100
     const [wager, setWager] = useState(1); // Wager per ball, default $1
-    const [score, setScore] = useState(0);
 
     const canvasRef = useRef(null);
     const engineRef = useRef(Matter.Engine.create({
@@ -57,17 +56,17 @@ const Plinko = () => {
         }
         Matter.Composite.add(engineRef.current.world, pegs);
 
-        // Create ground and multiplier zones
+        // Create invisible multiplier zones at the bottom
         const multiplierZones = multipliers.map((multiplier, i) => {
             const zoneWidth = canvasWidth / multipliers.length;
             const x = i * zoneWidth + zoneWidth / 2;
-            const y = canvasHeight - 20;
+            const y = canvasHeight - 30; // Position zones slightly above the canvas bottom
             return {
                 multiplier,
                 body: Matter.Bodies.rectangle(x, y, zoneWidth, 10, {
                     isStatic: true,
                     label: `Multiplier-${multiplier}`,
-                    render: { fillStyle: '#444444' },
+                    render: { visible: false }, // Make the zone invisible
                 }),
             };
         });
@@ -80,10 +79,6 @@ const Plinko = () => {
                     if ((bodyA === zone.body || bodyB === zone.body)) {
                         const ball = bodyA.label === 'Ball' ? bodyA : bodyB;
                         if (activeBallsRef.current.has(ball)) {
-                            const points = zone.multiplier * wager;
-                            setScore(prevScore => prevScore + points);
-                            setBalance(prevBalance => prevBalance + points);
-
                             // Remove ball from Matter.js world and activeBallsRef
                             Matter.Composite.remove(engineRef.current.world, ball);
                             activeBallsRef.current.delete(ball);
@@ -98,7 +93,7 @@ const Plinko = () => {
             Matter.Runner.stop(runner);
             Matter.Engine.clear(engineRef.current);
         };
-    }, [canvasWidth, canvasHeight, balance, wager]);
+    }, [canvasWidth, canvasHeight]);
 
     // Drop a ball from the top center of the canvas
     const dropBall = () => {
@@ -132,7 +127,6 @@ const Plinko = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
                 <button onClick={dropBall}>Drop Ball</button>
                 <div>Balance: ${balance.toFixed(2)}</div>
-                <div>Score: {score}</div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
                 <label>
