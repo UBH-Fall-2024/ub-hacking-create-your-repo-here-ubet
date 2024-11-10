@@ -43,9 +43,9 @@ function Homepage() {
     };
 
     return (
-        <div style={{ display: "flex" }}>
+        <div>
             {/* Sidebar with the link to Blackjack */}
-            <div style={{ marginRight: "20px", width: "150px" }}>
+            <div>
                 <h3>Navigation</h3>
                 <Link to="/blackjack">Go to Blackjack</Link>
             </div>
