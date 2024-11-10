@@ -3,12 +3,15 @@ from flask_pymongo import PyMongo
 from flask_cors import CORS
 from datetime import datetime
 import os
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
 app.config["MONGO_URI"] = "mongodb+srv://arteaga215:admin@cluster.mu9ti.mongodb.net/db"
 mongo = PyMongo(app)
+
+QUICKNODE_ENDPOINT = "https://omniscient-blissful-dinghy.solana-mainnet.quiknode.pro/10651a6d70e98220ef655b427f74ad1f3e4080d9"
 
 @app.route('/')
 def hello_world():
@@ -76,6 +79,101 @@ def get_user_wallet():
     if user:
         return jsonify(walletAddress=user.get("solana_wallet_address", None)), 200
     return jsonify(walletAddress=None), 200
+
+@app.route('/wallet_balance', methods=['GET'])
+def wallet_balance():
+    wallet_address = request.args.get("walletAddress")
+    if not wallet_address:
+        return jsonify(error="Wallet address not provided"), 400
+
+    try:
+        # Call QuickNode API to get SOL balance and token balances
+        payload = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getTokenAccountsByOwner",
+            "params": [
+                wallet_address,
+                {
+                    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"  # SPL Token Program ID
+                },
+                {
+                    "encoding": "jsonParsed"
+                }
+            ]
+        }
+
+        quicknode_response = requests.post(QUICKNODE_ENDPOINT, json=payload)
+        
+        # Print QuickNode response status and data for debugging
+        print("QuickNode API response status:", quicknode_response.status_code)
+        print("QuickNode API response data:", quicknode_response.text)
+        
+        # Check if response was successful
+        if quicknode_response.status_code != 200:
+            return jsonify(error="Failed to retrieve balance information from QuickNode"), 500
+
+        quicknode_data = quicknode_response.json()
+
+        # Retrieve SOL balance separately
+        sol_balance_payload = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getBalance",
+            "params": [
+                wallet_address
+            ]
+        }
+        sol_balance_response = requests.post(QUICKNODE_ENDPOINT, json=sol_balance_payload)
+        
+        if sol_balance_response.status_code != 200:
+            return jsonify(error="Failed to retrieve SOL balance"), 500
+
+        sol_balance_data = sol_balance_response.json()
+        sol_balance = sol_balance_data['result']['value'] / 1e9  # Convert lamports to SOL
+
+        # SOL to USD conversion (using CoinGecko API)
+        sol_price_response = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")
+        
+        # Print CoinGecko response for debugging
+        print("CoinGecko API response status:", sol_price_response.status_code)
+        print("CoinGecko API response data:", sol_price_response.text)
+
+        if sol_price_response.status_code != 200:
+            return jsonify(error="Failed to retrieve SOL price from CoinGecko"), 500
+
+        sol_price = sol_price_response.json()
+        sol_in_usd = sol_balance * sol_price['solana']['usd']
+
+        # Parse token balances
+        token_list = []
+        for account in quicknode_data['result']['value']:
+            token_info = account['account']['data']['parsed']['info']
+
+            token_balance = {}
+            if token_info['mint'] == "4ZvaCuYZc5Xx3Jc8K8RsSUhyPmM1dJUueJQBFG6dpump":
+                token_balance = {
+                    "token_address": token_info['mint'],
+                    "token_name": "UB",
+                    "balance": int(token_info['tokenAmount']['amount']) / (10 ** int(token_info['tokenAmount']['decimals']))
+                }                
+            else:
+                token_balance = {
+                    "token_address": token_info['mint'],
+                    "token_name": token_info.get("tokenSymbol", "Unknown"),
+                    "balance": int(token_info['tokenAmount']['amount']) / (10 ** int(token_info['tokenAmount']['decimals']))
+                }
+                
+            token_list.append(token_balance)
+
+        return jsonify({
+            "balance_in_sol": sol_balance,
+            "balance_in_usd": sol_in_usd,
+            "tokens": token_list
+        }), 200
+    except Exception as e:
+        print("Unexpected error occurred in wallet_balance:", e)
+        return jsonify(error="An unexpected error occurred"), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

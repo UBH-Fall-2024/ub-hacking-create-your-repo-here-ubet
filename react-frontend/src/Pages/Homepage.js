@@ -14,6 +14,9 @@ function Homepage() {
     const [walletConnected, setWalletConnected] = useState(null);  //for phantom
     const [isWalletDataFetched, setIsWalletDataFetched] = useState(false); // Track if wallet data is fetched
 
+    const [solBalance, setSolBalance] = useState(null);
+    const [solBalanceInUSD, setSolBalanceInUSD] = useState(null);
+    const [tokens, setTokens] = useState([]);
 
     useEffect(() => {
         fetchMessages();
@@ -67,6 +70,17 @@ function Homepage() {
                 setWalletConnected(true);
                 localStorage.setItem("walletAddress", data.walletAddress);
                 localStorage.setItem("walletConnected", "true");
+
+
+                // Fetch SOL and token balances
+                const balanceResponse = await fetch(`http://localhost:5000/wallet_balance?walletAddress=${data.walletAddress}`);
+                if (!balanceResponse.ok) throw new Error("Failed to fetch wallet balance");
+                const balanceData = await balanceResponse.json();
+
+                setSolBalance(balanceData.balance_in_sol);
+                setSolBalanceInUSD(balanceData.balance_in_usd);
+                setTokens(balanceData.tokens);
+
             } else {
                 setWalletAddress(null);
                 setWalletConnected(false);
@@ -155,7 +169,24 @@ function Homepage() {
                     {isWalletDataFetched && (!walletAddress) ? (
                         <button onClick={connectWallet}>Connect Phantom Wallet</button>
                     ) : (
-                        walletAddress && <p>Wallet connected: {walletAddress}</p>
+                        <div>
+                            {walletAddress && (
+                                <div>
+                                    <p>Wallet connected: {walletAddress}</p>
+                                    <p>Balance: {solBalance} SOL (${solBalanceInUSD} USD)</p>
+                                    {tokens.length > 0 && (
+                                        <div>
+                                            <h3>Tokens</h3>
+                                            <ul>
+                                                {tokens.map((token, idx) => (
+                                                    <li key={idx}>{token.token_name}: {token.balance}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                 </div>
