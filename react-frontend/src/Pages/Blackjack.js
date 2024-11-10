@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useBalance } from '../BalanceContext';
+import logo from '../imgs/ubhlogo.png';
+import { Link } from 'react-router-dom';
 
 function Blackjack() {
     const { balance, updateUserBalance } = useBalance();
     const [deck, setDeck] = useState([]);
     const [dealer, setDealer] = useState(null);
     const [player, setPlayer] = useState(null);
-    const [wallet, setWallet] = useState(parseFloat(balance.toFixed(2)) || 0);
+    const [wallet, setWallet] = useState(parseFloat((balance !== null && balance !== undefined ? balance.toFixed(2) : "0.00")) || 0);
     const [inputValue, setInputValue] = useState('');
     const [currentBet, setCurrentBet] = useState(null);
     const [gameOver, setGameOver] = useState(false);
@@ -199,6 +201,17 @@ function Blackjack() {
 
     return (
         <div>
+
+            {/* Sidebar with UBet logo and navigation links */}
+            <div className="sidebar">
+            <Link to="/">
+                    <img src={logo} alt="UBet Logo" className="logo" /> {/* Make logo clickable */}
+            </Link>
+            <h3>Navigation</h3>
+                <Link to="/blackjack">Go to Blackjack</Link>
+                <Link to="/plinko">Go to Plinko</Link>
+            </div>
+
             <h1>Welcome to Blackjack</h1>
             <p>Play a game of Blackjack here!</p>
 

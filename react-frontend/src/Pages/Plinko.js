@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Matter from 'matter-js';
+import { useBalance } from '../BalanceContext'; // Import useBalance
+import styles from './Plinko.module.css';
 
 // Global positioning and scaling variables for multiplier display
 const MULTIPLIER_VERTICAL_OFFSET = -140; // Controls vertical positioning of multipliers below the canvas
@@ -19,7 +21,7 @@ const Plinko = () => {
     const multipliers = [50, 20, 7, 4, 3, 1, 1, 0, 0, 0, 1, 1, 3, 4, 7, 20, 50];
 
     // Keep track of player balance and wager per ball
-    const [balance, setBalance] = useState(1000); // Starting balance of $1000
+    const { balance, updateUserBalance } = useBalance(); 
     const [wager, setWager] = useState(1); // Wager per ball, default $1
 
     const canvasRef = useRef(null);
@@ -94,7 +96,7 @@ const Plinko = () => {
                         if (activeBallsRef.current.has(ball)) {
                             // Update balance based on the multiplier for this zone
                             const multiplierEffect = zone.multiplier * wager;
-                            setBalance(prevBalance => prevBalance + multiplierEffect);
+                            updateUserBalance(multiplierEffect); // Update global balance
 
                             // Remove ball from Matter.js world and activeBallsRef
                             Matter.Composite.remove(engineRef.current.world, ball);
@@ -110,7 +112,7 @@ const Plinko = () => {
             Matter.Runner.stop(runner);
             Matter.Engine.clear(engineRef.current);
         };
-    }, [canvasWidth, canvasHeight, wager]);
+    }, [canvasWidth, canvasHeight, wager, updateUserBalance]);
 
     // Drop a ball from the top center of the canvas
     const dropBall = () => {
@@ -121,7 +123,7 @@ const Plinko = () => {
                 render: { fillStyle: '#f23' },
             });
             Matter.Composite.add(engineRef.current.world, ball);
-            setBalance(prevBalance => prevBalance - wager);
+            updateUserBalance(-wager); // Deduct wager from global balance
 
             // Add to activeBallsRef set to track it for removal
             activeBallsRef.current.add(ball);

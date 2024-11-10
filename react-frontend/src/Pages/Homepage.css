@@ -1,0 +1,207 @@
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Main layout */
+body {
+    background-color: #0A0E27;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+}
+
+/* Container to align navigation and main content */
+.main-container {
+    display: flex;
+    width: 90%;
+    max-width: 1200px;
+    margin: 2rem;
+}
+
+/* Sidebar for navigation */
+.sidebar {
+    background-color: #162042;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 20px;
+}
+
+.sidebar h1 {
+    color: #00AEEF;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.sidebar h3 {
+    color: #00AEEF;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.sidebar a {
+    color: #00AEEF;
+    text-decoration: none;
+    font-size: 1rem;
+    margin: 10px 0;
+}
+
+.sidebar a:hover {
+    text-decoration: underline;
+}
+
+/* Content area on the right */
+.content {
+    background-color: #0A0E27;
+    width: 100%;
+    max-width: 800px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Welcome message and balance container */
+.header-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.welcome {
+    font-size: 1.2rem;
+    color: #D1D5DB;
+}
+
+/* Balance display */
+.balance-display {
+    background-color: #2E2E2E; /* Grey background */
+    color: #FFFFFF;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    margin-left: 1rem;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Button Styles */
+button {
+    background-color: #007AFF;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #005bb5;
+}
+
+button.sign-out {
+    background-color: #ff3b30;
+}
+
+button.sign-out:hover {
+    background-color: #d32f2f;
+}
+
+/* Wallet Section */
+.wallet-section {
+    margin-top: 1.5rem;
+    background-color: #162042;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    text-align: left;
+}
+.logo {
+    width: 100px; /* Adjust width as needed */
+    margin-bottom: 10px;
+}
+
+.wallet-section h3 {
+    color: #00AEEF;
+    margin-bottom: 1rem;
+}
+
+/* Input Fields */
+input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+/* Align deposit and withdraw buttons with inputs */
+.deposit-withdraw-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+/*============*/
+
+/* Sidebar styles */
+.sidebar {
+    position: fixed; /* Fixed position to keep it on the left side */
+    left: 0;
+    top: 0;
+    width: 200px; /* Set the width of the sidebar */
+    height: 100%;
+    background-color: #1a1a2e; /* Dark background color for the sidebar */
+    padding: 20px;
+    box-sizing: border-box;
+    color: white;
+}
+
+/* Logo styling */
+.logo {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+/* Main content styling */
+.content {
+    margin-left: 220px; /* Leave space for the sidebar */
+    padding: 20px;
+}
+
+/* Navigation links */
+.sidebar h3 {
+    color: #00aaff;
+    margin-bottom: 10px;
+}
+
+.sidebar a {
+    color: #00aaff;
+    display: block;
+    margin-bottom: 10px;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    text-decoration: underline;
+}
+
+/* Additional styling for the blackjack game area */
+.game-area {
+    margin-top: 20px;
+}
+

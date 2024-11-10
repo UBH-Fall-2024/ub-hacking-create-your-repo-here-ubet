@@ -4,18 +4,33 @@ from flask_cors import CORS
 from datetime import datetime
 import requests
 
+from solana.rpc.api import Client
+from solana.publickey import PublicKey
+from solana.transaction import Transaction
+from solana.keypair import Keypair
+from solana.system_program import transfer
+from spl.token.instructions import TransferParams, transfer as create_transfer_instruction, get_associated_token_address, create_associated_token_account
+from spl.token.constants import TOKEN_PROGRAM_ID
+import traceback
+import base64
+import os
+
 app = Flask(__name__)
 CORS(app)
 
 app.config["MONGO_URI"] = "mongodb+srv://arteaga215:admin@cluster.mu9ti.mongodb.net/db"
 mongo = PyMongo(app)
 
+client = Client("https://api.mainnet-beta.solana.com")
 house_wallet_address = "46tWio1DEqRn72msURucPgGVMVoHgmEza4mxk7SeZgtn"
+house_wallet_private_key = ""
+
+
 QUICKNODE_ENDPOINT = "https://omniscient-blissful-dinghy.solana-mainnet.quiknode.pro/10651a6d70e98220ef655b427f74ad1f3e4080d9"
 
 @app.route('/')
 def hello_world():
-    return jsonify(message="Hello from Flask Backend!")
+    return jsonify(message="UBET")
 
 # Route to add a message to MongoDB
 @app.route('/add_message', methods=['POST'])
@@ -236,6 +251,103 @@ def update_balance():
     )
 
     return jsonify(success=True, message="Balance updated successfully"), 200
+
+#just does not work
+@app.route('/withdraw_ub', methods=['POST'])
+def withdraw_ub():
+    try:    
+        data = request.json
+        email = data.get("email")
+        withdraw_amount_usd = data.get("amount")
+
+        if not email or withdraw_amount_usd is None:
+            return jsonify(error="Email or amount not provided"), 400
+
+        user = mongo.db.users.find_one({"email": email})
+        if not user:
+            return jsonify(error="User not found"), 404
+
+        current_balance = user.get("balance", 0)
+
+        # Check if the user has enough balance
+        if current_balance < withdraw_amount_usd:
+            return jsonify(error="Insufficient balance"), 400
+
+        # Get the current SOL price in USD
+        sol_price_response = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")
+        if sol_price_response.status_code != 200:
+            return jsonify(error="Failed to retrieve SOL price from CoinGecko"), 500
+
+        sol_price = sol_price_response.json().get("solana", {}).get("usd", 0)
+        if sol_price == 0:
+            return jsonify(error="Invalid SOL price received from CoinGecko"), 500
+
+        # Calculate the equivalent UB token amount (in smallest units)
+        withdraw_amount_ub = (withdraw_amount_usd / sol_price) * 1e6  # Assuming 1 UB = 1,000,000 smallest units
+
+        try:
+            # Decode the private key for signing
+            private_key = base64.b64decode(house_wallet_private_key)
+            house_wallet_keypair = Keypair.from_secret_key(private_key)
+            house_wallet_address = house_wallet_keypair.public_key
+
+            # Get the associated token accounts for the house wallet and the user
+            mint_address = PublicKey("4ZvaCuYZc5Xx3Jc8K8RsSUhyPmM1dJUueJQBFG6dpump")  # UB token mint address
+            user_wallet_address = PublicKey(user["solana_wallet_address"])
+
+            # Ensure associated token accounts exist
+            house_token_account = get_associated_token_address(mint_address, house_wallet_address)
+            user_token_account = get_associated_token_address(mint_address, user_wallet_address)
+
+            # Check if the house token account exists and fetch balance
+            house_token_account_info = client.get_token_account_balance(house_token_account)
+            if house_token_account_info['result']['value'] is None:
+                return jsonify(error="House token account does not exist or has no balance"), 400
+
+            # Check balance in house token account
+            house_balance = house_token_account_info['result']['value']['uiAmount']
+            print(f"House token account UB balance: {house_balance} UB")
+
+            if house_balance < withdraw_amount_ub / 1e6:
+                return jsonify(error="Insufficient UB token balance in house account"), 400
+
+            # Create the transaction for transferring UB tokens
+            transaction = Transaction()
+            transaction.add(
+                create_transfer_instruction(
+                    TransferParams(
+                        program_id=TOKEN_PROGRAM_ID,
+                        source=house_token_account,
+                        dest=user_token_account,
+                        owner=house_wallet_address,
+                        amount=int(withdraw_amount_ub)
+                    )
+                )
+            )
+
+            # Send and sign the transaction
+            transaction_result = client.send_transaction(transaction, house_wallet_keypair)
+            print("Transaction Result:", transaction_result)
+
+            if transaction_result.get("result"):
+                # Update user balance in MongoDB
+                mongo.db.users.update_one(
+                    {"email": email},
+                    {"$inc": {"balance": -withdraw_amount_usd}}
+                )
+                return jsonify(success=True, message="Withdrawal successful", transaction_id=transaction_result["result"]), 200
+            else:
+                return jsonify(error="Transaction failed on the Solana network"), 500
+
+        except Exception as e:
+            print("Unexpected error in withdraw_ub:", e)
+            traceback.print_exc()  # Print full stack trace for debugging
+            return jsonify(error="An unexpected error occurred"), 500
+    except Exception as e:
+        print("Unexpected error in withdraw_ub:", e)
+        traceback.print_exc()
+        return jsonify(error="An unexpected error occurred"), 500
+    
 
 ''' potential in this method but doesnt work properly on successful transaction
 @app.route('/verify_deposit', methods=['POST'])

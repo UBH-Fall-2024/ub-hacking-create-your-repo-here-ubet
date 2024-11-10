@@ -1,0 +1,49 @@
+/* Plinko.module.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #14151f; /* Background specific to Plinko */
+    min-height: 100vh;
+    color: #ffffff; /* White text color */
+    padding-top: 20px;
+}
+
+.canvasContainer {
+    margin-bottom: 20px;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 600px;
+    margin: 10px 0;
+}
+
+.wagerInput {
+    width: 60px;
+    margin-left: 5px;
+}
+
+.multiplierDisplay {
+    display: flex;
+    justify-content: center;
+    margin-top: -140px; /* Positioning for multipliers */
+    margin-left: 455px;
+    background-color: #14151f;
+    padding: 10px 0;
+    width: 45%; /* Scales according to the width of the multipliers */
+}
+
+.multiplierItem {
+    width: 5.88%; /* 100% divided by the number of multipliers */
+    text-align: center;
+    color: #4CAF50;
+    font-size: 16px;
+    font-weight: bold;
+    border: 1px solid #4CAF50;
+    padding: 5px 0;
+    box-sizing: border-box;
+}

@@ -7,6 +7,9 @@ import { Connection, PublicKey, Transaction, SystemProgram } from "@solana/web3.
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createTransferInstruction } from "@solana/spl-token";
 import { Buffer } from 'buffer';
 import { Link } from 'react-router-dom';
+import './Homepage.css';
+
+import logo from '../imgs/ubhlogo.png';
 
 window.Buffer = Buffer;
 
@@ -26,7 +29,7 @@ function Homepage() {
     const [tokens, setTokens] = useState([]);
 
     const [depositAmount, setDepositAmount] = useState("");  //input field for deposit amount DO NOT USE FOR BALANCE
-
+    const [withdrawAmount, setWithdrawAmount] = useState("");
 
     useEffect(() => {
         fetchMessages();
@@ -244,80 +247,106 @@ function Homepage() {
         }
     };
 
+    const withdrawFromHouseWallet = async () => {
+        if (!withdrawAmount) {
+            alert("Please enter an amount to withdraw.");
+            return;
+        }
+    
+        try {
+            const response = await fetch("http://localhost:5000/withdraw_ub", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: user.email,
+                    amount: parseFloat(withdrawAmount)
+                })
+            });
+    
+            const data = await response.json();
+            if (data.success) {
+                alert("Withdrawal successful!");
+                setWithdrawAmount("");
+                fetchWalletData();  // Refresh wallet data to update balance
+            } else {
+                alert(data.error || "Withdrawal failed. Please try again.");
+            }
+        } catch (error) {
+            console.error("Withdraw error:", error);
+            alert("An error occurred during the withdrawal.");
+        }
+    };
+
     return (
-        <div>
-            {isAuthenticated ? (
-                <div>
-                    {/* Sidebar with the link to Blackjack and Plinko */}
-                    <h3>Navigation</h3>
-                    <Link to="/blackjack">Go to Blackjack</Link><br />
-                    <Link to="/plinko">Go to Plinko</Link>
-                </div>
-            ) : (
-                <div></div>
-            )}
-
-            {/* Main Content */}
-            <div>
-                <h1>Hello from React Frontend</h1>
-
+        <div className="main-container">
+            {/* Sidebar with UBet logo and navigation links */}
+            <div className="sidebar">
+            <Link to="/">
+                    <img src={logo} alt="UBet Logo" className="logo" /> {/* Make logo clickable */}
+            </Link>
+            <h3>Navigation</h3>
+                <Link to="/blackjack">Go to Blackjack</Link>
+                <Link to="/plinko">Go to Plinko</Link>
+            </div>
+    
+            {/* Main content on the right */}
+            <div className="content">
                 {isAuthenticated ? (
                     <div>
-                        <p>Welcome, {user.name}</p>
-
-                        <button onClick={() => {
-                        // Clear local storage on logout
-                        localStorage.removeItem("walletAddress");
-                        localStorage.removeItem("walletConnected");
-                        setWalletAddress(null);
-                        setWalletConnected(false);
-                        setIsWalletDataFetched(false);
-                        logout({ returnTo: window.location.origin });
-                    }}>
+                        {/* Header section with Welcome message and Balance */}
+                        <div className="header-section">
+                            <p className="welcome">Welcome, {user.name}</p>
+                            <div className="balance-display">
+                            $ {(balance !== null && balance !== undefined ? balance.toFixed(2) : "0.00")} USD
+                            </div>
+                        </div>
+    
+                        <button className="sign-out" onClick={() => {
+                            localStorage.removeItem("walletAddress");
+                            localStorage.removeItem("walletConnected");
+                            setWalletAddress(null);
+                            setWalletConnected(false);
+                            setIsWalletDataFetched(false);
+                            logout({ returnTo: window.location.origin });
+                        }}>
                             Sign Out
                         </button>
-
-                    {isWalletDataFetched && (!walletAddress) ? (
-                        <button onClick={connectWallet}>Connect Phantom Wallet</button>
-                    ) : (
-                        <div>
-                            {walletAddress && (
-                                <div>
-                                    <p>Wallet connected: {walletAddress}</p>
-
-                                    {/*
-                                        <p>SOL Balance: {solBalance} SOL (${solBalanceInUSD} USD)</p>
-                                        {tokens.length > 0 && (
+    
+                        {isWalletDataFetched && (!walletAddress) ? (
+                            <button onClick={connectWallet}>Connect Phantom Wallet</button>
+                        ) : (
+                            <div>
+                                {walletAddress && (
+                                    <div className="wallet-section">
+                                        <p>Wallet connected: {walletAddress}</p>
+    
+                                        <div className="deposit-withdraw-buttons">
                                             <div>
-                                                <h3>Tokens</h3>
-                                                <ul>
-                                                    {tokens.map((token, idx) => (
-                                                        <li key={idx}>{token.token_name}: {token.balance}</li>
-                                                    ))}
-                                                </ul>
+                                                <h3>Withdraw UB Tokens</h3>
+                                                <input
+                                                    type="number"
+                                                    value={withdrawAmount}
+                                                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                                                    placeholder="Enter amount to withdraw in USD"
+                                                />
+                                                <button onClick={withdrawFromHouseWallet}>Withdraw UB</button>
                                             </div>
-                                        )}
-                                    */}
-                                    <div>
-                                        {balance !== null ? <p>Current Balance: ${balance.toFixed(2)} USD</p> : <p>Loading balance...</p>}
+    
+                                            <div>
+                                                <h3>Deposit UB Tokens</h3>
+                                                <input
+                                                    type="number"
+                                                    value={depositAmount}
+                                                    onChange={(e) => setDepositAmount(e.target.value)}
+                                                    placeholder="Enter amount of UB"
+                                                />
+                                                <button onClick={depositToHouseWallet}>Deposit UB</button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        <h3>Deposit UB Tokens</h3>
-                                        <input
-                                            type="number"
-                                            value={depositAmount}
-                                            onChange={(e) => setDepositAmount(e.target.value)}
-                                            placeholder="Enter amount of UB"
-                                        />
-                                        <button onClick={depositToHouseWallet}>Deposit UB</button>
-                                    </div>                                    
-
-                                </div>
-                            )}
-                        </div>
-                    )}
-
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div>
@@ -325,30 +354,10 @@ function Homepage() {
                         <button onClick={() => loginWithRedirect()}>Log In/Sign Up</button>
                     </div>
                 )}
-
-                {/* Main Content 
-                    <form onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Enter a message"
-                        />
-                        <button type="submit">Submit</button>
-                    </form>
-                    <h2>Messages</h2>
-                    <ul>
-                        {messages.map((msg, index) => (
-                            <li key={index}>
-                                {msg.message} (at {new Date(msg.timestamp).toLocaleString()})
-                            </li>
-                        ))}
-                    </ul>
-                */}
-
             </div>
         </div>
     );
+    
 }
 
 export default Homepage;
